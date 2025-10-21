@@ -1,3 +1,4 @@
+// @ts-ignore - jsPDF types
 import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
 import { Campaign, Placement, ExportData } from '@/types';
