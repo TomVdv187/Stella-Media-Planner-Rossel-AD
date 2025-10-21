@@ -4,10 +4,33 @@ import React, { useState, useEffect } from 'react';
 import { Campaign, Placement } from '@/types';
 import { getCampaigns, deleteCampaign, getPlacements, generateId } from '@/lib/storage';
 import { exportToPDF, exportToExcel } from '@/lib/export';
-import { BarChart3, Plus, Calendar, Euro, Eye, Edit, Trash2, FileDown, Settings, Users } from 'lucide-react';
+import { 
+  BarChart3, 
+  Plus, 
+  Calendar, 
+  Euro, 
+  Eye, 
+  Edit, 
+  Trash2, 
+  FileDown, 
+  Settings, 
+  Users,
+  TrendingUp,
+  Target,
+  Activity,
+  PieChart,
+  Bot,
+  Sparkles
+} from 'lucide-react';
 import SimpleCampaignList from './campaigns/SimpleCampaignList';
 import CampaignForm from './campaigns/CampaignForm';
 import CampaignDetails from './campaigns/CampaignDetails';
+import ProfessionalHeader from './layout/ProfessionalHeader';
+import MetricCard from './ui/MetricCard';
+import AIAssistant from './ai/AIAssistant';
+import MediaPlanViewer from './plans/MediaPlanViewer';
+import SmartInsights from './ai/SmartInsights';
+import { BriefingData, MediaPlanningAgent, MediaPlan } from '@/lib/mediaAgent';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -17,6 +40,8 @@ export default function SimpleDashboard() {
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
   const [viewingCampaign, setViewingCampaign] = useState<Campaign | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [showAIAssistant, setShowAIAssistant] = useState(false);
+  const [generatedPlan, setGeneratedPlan] = useState<MediaPlan | null>(null);
 
   useEffect(() => {
     loadCampaigns();
@@ -88,120 +113,207 @@ export default function SimpleDashboard() {
     setRefreshTrigger(prev => prev + 1);
   };
 
+  const handleAIAssistant = () => {
+    setShowAIAssistant(true);
+  };
+
+  const handlePlanGenerated = (briefing: BriefingData) => {
+    const plan = MediaPlanningAgent.calculatePlan(briefing);
+    setGeneratedPlan(plan);
+    setShowAIAssistant(false);
+  };
+
+  const handleClosePlanViewer = () => {
+    setGeneratedPlan(null);
+  };
+
+  const handleExportPlan = () => {
+    if (generatedPlan) {
+      // Export plan as PDF logic would go here
+      console.log('Exporting plan:', generatedPlan);
+    }
+  };
+
   // Calculate stats
   const totalBudget = campaigns.reduce((sum, campaign) => sum + campaign.budget, 0);
   const totalCost = campaigns.reduce((sum, campaign) => sum + campaign.totalCost, 0);
   const activeCampaigns = campaigns.filter(c => c.status === 'active').length;
+  const budgetUtilization = totalBudget > 0 ? (totalCost / totalBudget) * 100 : 0;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-rossel-blue">Rossel</h1>
-              <span className="ml-2 text-gray-600">Media Planning</span>
+    <div className="min-h-screen">
+      <ProfessionalHeader onCreateCampaign={handleCreateCampaign} />
+      
+      <main className="page-container py-8 space-y-8">
+        {/* Hero Section */}
+        <div className="section-header animate-fade-in">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="section-title text-balance">
+                Tableau de Bord 
+                <span className="bg-gradient-to-r from-rossel-600 to-accent-500 bg-clip-text text-transparent ml-2">
+                  Media Planning
+                </span>
+              </h1>
+              <p className="section-subtitle">
+                Gérez vos campagnes publicitaires Rossel avec une vue d'ensemble complète et des outils professionnels
+              </p>
             </div>
+            <div className="hidden lg:block">
+              <div className="glass-effect rounded-xl p-4 border border-gray-200">
+                <div className="flex items-center space-x-2 text-sm text-gray-600">
+                  <div className="w-2 h-2 bg-success-500 rounded-full animate-pulse"></div>
+                  <span>Données sauvegardées localement</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-            <div className="flex items-center space-x-4">
+        {/* Metrics Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in">
+          <MetricCard
+            title="Total Campagnes"
+            value={campaigns.length}
+            icon={BarChart3}
+            gradient="from-rossel-500 to-rossel-600"
+            iconColor="text-rossel-600"
+            description="Toutes vos campagnes créées"
+            change={{
+              value: 12,
+              type: 'increase'
+            }}
+          />
+          
+          <MetricCard
+            title="Campagnes Actives"
+            value={activeCampaigns}
+            icon={Activity}
+            gradient="from-success-500 to-success-600"
+            iconColor="text-success-600"
+            description="En cours d'exécution"
+            change={{
+              value: 8,
+              type: 'increase'
+            }}
+          />
+          
+          <MetricCard
+            title="Budget Total"
+            value={`${totalBudget.toLocaleString('fr-BE')} €`}
+            icon={Target}
+            gradient="from-accent-500 to-accent-600"
+            iconColor="text-accent-600"
+            description="Budget alloué aux campagnes"
+            change={{
+              value: 15,
+              type: 'increase'
+            }}
+          />
+          
+          <MetricCard
+            title="Utilisation Budget"
+            value={`${budgetUtilization.toFixed(1)}%`}
+            icon={PieChart}
+            gradient="from-primary-500 to-primary-600"
+            iconColor="text-primary-600"
+            description={`${totalCost.toLocaleString('fr-BE')} € dépensés`}
+            change={{
+              value: 5,
+              type: budgetUtilization > 80 ? 'decrease' : 'increase'
+            }}
+          />
+        </div>
+
+        {/* Smart Insights */}
+        <SmartInsights campaigns={campaigns} />
+
+        {/* AI Assistant CTA */}
+        <div className="card bg-gradient-to-br from-rossel-50 via-white to-accent-50 border-rossel-100 animate-fade-in">
+          <div className="card-body">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-rossel-500 to-rossel-600 rounded-xl flex items-center justify-center">
+                  <Bot className="w-7 h-7 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Assistant IA - Plan Média Intelligent</h3>
+                  <p className="text-gray-600 text-sm">Créez un plan média optimisé en quelques minutes avec notre IA avancée</p>
+                </div>
+              </div>
               <button
-                onClick={handleCreateCampaign}
-                className="bg-rossel-blue hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+                onClick={handleAIAssistant}
+                className="btn-primary bg-gradient-to-r from-rossel-500 to-rossel-600 hover:from-rossel-600 hover:to-rossel-700 shadow-lg hover:shadow-xl transition-all duration-200"
               >
-                <Plus className="w-4 h-4" />
-                <span>Nouvelle campagne</span>
+                <Sparkles className="w-4 h-4 mr-2" />
+                Créer avec l'IA
               </button>
             </div>
           </div>
         </div>
-      </header>
-      
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <BarChart3 className="w-6 h-6 text-blue-600" />
+
+        {/* Campaigns Section */}
+        <div className="card animate-fade-in">
+          <div className="card-header">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">Mes Campagnes</h2>
+                <p className="text-sm text-gray-600 mt-1">Gérez et suivez toutes vos campagnes média</p>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Campagnes</p>
-                <p className="text-2xl font-bold text-gray-900">{campaigns.length}</p>
+              <div className="flex items-center space-x-3">
+                <div className="hidden sm:flex items-center space-x-2 text-sm text-gray-500">
+                  <span>{campaigns.length} campagne{campaigns.length !== 1 ? 's' : ''}</span>
+                </div>
               </div>
             </div>
           </div>
-
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Calendar className="w-6 h-6 text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Campagnes Actives</p>
-                <p className="text-2xl font-bold text-gray-900">{activeCampaigns}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <Euro className="w-6 h-6 text-yellow-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Budget Total</p>
-                <p className="text-2xl font-bold text-gray-900">{totalBudget.toLocaleString('fr-BE')} €</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Euro className="w-6 h-6 text-purple-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Coût Total</p>
-                <p className="text-2xl font-bold text-gray-900">{totalCost.toLocaleString('fr-BE')} €</p>
-              </div>
-            </div>
+          <div className="card-body">
+            <SimpleCampaignList
+              campaigns={campaigns}
+              onEditCampaign={handleEditCampaign}
+              onViewCampaign={handleViewCampaign}
+              onDeleteCampaign={handleDeleteCampaign}
+              onExportCampaign={handleExportCampaign}
+            />
           </div>
         </div>
+      </main>
 
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Mes campagnes</h2>
-          <p className="text-gray-600">Gérez vos campagnes de planning média</p>
-        </div>
-
-        <SimpleCampaignList
-          campaigns={campaigns}
-          onEditCampaign={handleEditCampaign}
-          onViewCampaign={handleViewCampaign}
-          onDeleteCampaign={handleDeleteCampaign}
-          onExportCampaign={handleExportCampaign}
+      {/* Modals */}
+      {showCampaignForm && (
+        <CampaignForm
+          campaign={editingCampaign}
+          onSave={handleCampaignSaved}
+          onCancel={handleCampaignFormCancel}
         />
+      )}
 
-        {showCampaignForm && (
-          <CampaignForm
-            campaign={editingCampaign}
-            onSave={handleCampaignSaved}
-            onCancel={handleCampaignFormCancel}
-          />
-        )}
+      {viewingCampaign && (
+        <CampaignDetails
+          campaign={viewingCampaign}
+          onClose={handleCampaignDetailsClose}
+          onEdit={() => {
+            handleEditCampaign(viewingCampaign);
+            setViewingCampaign(null);
+          }}
+          onRefresh={handleCampaignRefresh}
+        />
+      )}
 
-        {viewingCampaign && (
-          <CampaignDetails
-            campaign={viewingCampaign}
-            onClose={handleCampaignDetailsClose}
-            onEdit={() => {
-              handleEditCampaign(viewingCampaign);
-              setViewingCampaign(null);
-            }}
-            onRefresh={handleCampaignRefresh}
-          />
-        )}
-      </div>
+      {showAIAssistant && (
+        <AIAssistant
+          onPlanGenerated={handlePlanGenerated}
+          onClose={() => setShowAIAssistant(false)}
+        />
+      )}
+
+      {generatedPlan && (
+        <MediaPlanViewer
+          plan={generatedPlan}
+          onClose={handleClosePlanViewer}
+          onExport={handleExportPlan}
+        />
+      )}
     </div>
   );
 }

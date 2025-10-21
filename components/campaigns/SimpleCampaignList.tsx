@@ -2,9 +2,10 @@
 
 import React from 'react';
 import { Campaign } from '@/types';
-import { Calendar, Euro, Eye, Edit, Trash2, FileDown } from 'lucide-react';
+import { Calendar, Euro, Eye, Edit, Trash2, FileDown, Clock, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import StatusBadge from '../ui/StatusBadge';
 
 interface SimpleCampaignListProps {
   campaigns: Campaign[];
@@ -21,111 +22,124 @@ export default function SimpleCampaignList({
   onDeleteCampaign,
   onExportCampaign
 }: SimpleCampaignListProps) {
-  const getStatusColor = (status: Campaign['status']) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800';
-      case 'completed':
-        return 'bg-blue-100 text-blue-800';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getStatusText = (status: Campaign['status']) => {
-    switch (status) {
-      case 'active':
-        return 'Active';
-      case 'completed':
-        return 'Terminée';
-      case 'cancelled':
-        return 'Annulée';
-      default:
-        return 'Brouillon';
-    }
-  };
-
   if (campaigns.length === 0) {
     return (
-      <div className="text-center py-12 bg-white rounded-lg shadow">
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Aucune campagne</h3>
-        <p className="text-gray-600">Créez votre première campagne pour commencer.</p>
+      <div className="text-center py-16">
+        <div className="w-16 h-16 bg-gradient-to-br from-rossel-100 to-rossel-200 rounded-full flex items-center justify-center mx-auto mb-4">
+          <TrendingUp className="w-8 h-8 text-rossel-600" />
+        </div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Aucune campagne créée</h3>
+        <p className="text-gray-600 max-w-md mx-auto">
+          Commencez par créer votre première campagne de planification média pour gérer vos budgets et emplacements publicitaires.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white shadow overflow-hidden sm:rounded-md">
-      <ul className="divide-y divide-gray-200">
-        {campaigns.map((campaign) => (
-          <li key={campaign.id}>
-            <div className="px-4 py-4 sm:px-6 hover:bg-gray-50">
-              <div className="flex items-center justify-between">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-medium text-gray-900 truncate">
+    <div className="divide-y divide-gray-100">
+      {campaigns.map((campaign, index) => (
+        <div 
+          key={campaign.id} 
+          className="group p-6 hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-rossel-50/30 transition-all duration-200 animate-slide-in"
+          style={{ animationDelay: `${index * 100}ms` }}
+        >
+          <div className="flex items-start justify-between">
+            <div className="flex-1 min-w-0 space-y-3">
+              {/* Header */}
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-3 mb-2">
+                    <h3 className="text-lg font-semibold text-gray-900 group-hover:text-rossel-700 transition-colors truncate">
                       {campaign.name}
                     </h3>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(campaign.status)}`}>
-                      {getStatusText(campaign.status)}
-                    </span>
+                    <StatusBadge status={campaign.status} />
                   </div>
-                  <div className="mt-1 flex items-center text-sm text-gray-600">
-                    <p className="truncate">{campaign.client}</p>
-                  </div>
-                  <div className="mt-2 flex items-center space-x-4 text-sm text-gray-500">
-                    <div className="flex items-center">
-                      <Calendar className="w-4 h-4 mr-1" />
-                      <span>
-                        {format(campaign.startDate, 'dd MMM', { locale: fr })} - {format(campaign.endDate, 'dd MMM yyyy', { locale: fr })}
-                      </span>
-                    </div>
-                    <div className="flex items-center">
-                      <Euro className="w-4 h-4 mr-1" />
-                      <span>{campaign.budget.toLocaleString('fr-BE')} €</span>
-                    </div>
-                    <div className="text-xs">
-                      Coût total: {campaign.totalCost.toLocaleString('fr-BE')} €
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => onViewCampaign(campaign)}
-                    className="text-blue-600 hover:text-blue-800 p-2 rounded-lg hover:bg-blue-50 transition-colors"
-                    title="Voir les détails"
-                  >
-                    <Eye className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => onExportCampaign(campaign)}
-                    className="text-green-600 hover:text-green-800 p-2 rounded-lg hover:bg-green-50 transition-colors"
-                    title="Exporter"
-                  >
-                    <FileDown className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => onEditCampaign(campaign)}
-                    className="text-gray-600 hover:text-gray-800 p-2 rounded-lg hover:bg-gray-50 transition-colors"
-                    title="Modifier"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => onDeleteCampaign(campaign)}
-                    className="text-red-600 hover:text-red-800 p-2 rounded-lg hover:bg-red-50 transition-colors"
-                    title="Supprimer"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <p className="text-sm text-gray-600 font-medium">
+                    {campaign.client}
+                  </p>
                 </div>
               </div>
+
+              {/* Metrics */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="flex items-center space-x-2 text-sm">
+                  <Calendar className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  <span className="text-gray-600">
+                    {format(campaign.startDate, 'dd MMM', { locale: fr })} - {format(campaign.endDate, 'dd MMM yyyy', { locale: fr })}
+                  </span>
+                </div>
+                
+                <div className="flex items-center space-x-2 text-sm">
+                  <Euro className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  <span className="text-gray-600">
+                    Budget: <span className="font-semibold text-gray-900">{campaign.budget.toLocaleString('fr-BE')} €</span>
+                  </span>
+                </div>
+                
+                <div className="flex items-center space-x-2 text-sm">
+                  <TrendingUp className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  <span className="text-gray-600">
+                    Dépensé: <span className="font-semibold text-gray-900">{campaign.totalCost.toLocaleString('fr-BE')} €</span>
+                  </span>
+                </div>
+              </div>
+
+              {/* Progress Bar */}
+              {campaign.budget > 0 && (
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-500">Utilisation du budget</span>
+                    <span className="font-medium text-gray-700">
+                      {((campaign.totalCost / campaign.budget) * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-1.5">
+                    <div 
+                      className="bg-gradient-to-r from-rossel-500 to-rossel-600 h-1.5 rounded-full transition-all duration-500"
+                      style={{ 
+                        width: `${Math.min((campaign.totalCost / campaign.budget) * 100, 100)}%` 
+                      }}
+                    ></div>
+                  </div>
+                </div>
+              )}
             </div>
-          </li>
-        ))}
-      </ul>
+
+            {/* Actions */}
+            <div className="flex items-center space-x-1 ml-4">
+              <button
+                onClick={() => onViewCampaign(campaign)}
+                className="p-2 text-gray-400 hover:text-rossel-600 hover:bg-rossel-50 rounded-lg transition-all duration-200 group/btn"
+                title="Voir les détails"
+              >
+                <Eye className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
+              </button>
+              <button
+                onClick={() => onExportCampaign(campaign)}
+                className="p-2 text-gray-400 hover:text-success-600 hover:bg-success-50 rounded-lg transition-all duration-200 group/btn"
+                title="Exporter"
+              >
+                <FileDown className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
+              </button>
+              <button
+                onClick={() => onEditCampaign(campaign)}
+                className="p-2 text-gray-400 hover:text-accent-600 hover:bg-accent-50 rounded-lg transition-all duration-200 group/btn"
+                title="Modifier"
+              >
+                <Edit className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
+              </button>
+              <button
+                onClick={() => onDeleteCampaign(campaign)}
+                className="p-2 text-gray-400 hover:text-error-600 hover:bg-error-50 rounded-lg transition-all duration-200 group/btn"
+                title="Supprimer"
+              >
+                <Trash2 className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
+              </button>
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
